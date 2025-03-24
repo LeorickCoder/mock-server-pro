@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Server Pro - 开发环境</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="app">
+    <h1>Mock Server Pro 开发环境</h1>
+    <p>此页面用于测试和开发 mock-server-pro 工具库</p>
+    
+    <div class="card">
+      <h2>API调试控制台</h2>
+      <div class="api-console">
+        <div class="api-form">
+          <div class="form-group">
+            <label for="method">请求方法:</label>
+            <select id="method">
+              <option value="GET">GET</option>
+              <option value="POST">POST</option>
+              <option value="PUT">PUT</option>
+              <option value="DELETE">DELETE</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="endpoint">请求地址:</label>
+            <input type="text" id="endpoint" value="/api/users">
+          </div>
+          
+          <div class="form-group" id="body-container">
+            <label for="body">请求体 (JSON):</label>
+            <textarea id="body" rows="5">{ "name": "测试用户", "age": 30 }</textarea>
+          </div>
+          
+          <button id="send-request">发送请求</button>
+        </div>
+        
+        <div class="response-container">
+          <h3>响应结果:</h3>
+          <div class="response-info">
+            <span class="status"></span>
+            <span class="time"></span>
+          </div>
+          <pre id="response">// 响应将显示在这里</pre>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card endpoints-card">
+      <h2>可用 API 端点</h2>
+      <div id="endpoints">加载中...</div>
+    </div>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
+</html> 

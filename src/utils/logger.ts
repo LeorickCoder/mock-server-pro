@@ -1,49 +1,67 @@
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export interface LoggerConfig {
+  prefix?: string
+  debug?: boolean
+  timestamp?: boolean
+  level?: 'debug' | 'info' | 'warn' | 'error'
+}
 
-class Logger {
-  private level: LogLevel = 'info';
-  private levels: Record<LogLevel, number> = {
-    debug: 0,
-    info: 1,
-    warn: 2,
-    error: 3
-  };
+class MockLogger {
+  private prefix: string
+  private isDebug: boolean
+  private showTimestamp: boolean
 
-  setLevel(level: LogLevel): void {
-    this.level = level;
+  constructor(config: LoggerConfig = {}) {
+    this.prefix = config.prefix || '[Mock]'
+    this.isDebug = config.debug ?? process.env.NODE_ENV === 'development'
+    this.showTimestamp = config.timestamp ?? true
   }
 
-  private shouldLog(level: LogLevel): boolean {
-    return this.levels[level] >= this.levels[this.level];
+  private formatMessage(level: string, message: string, ...args: any[]): string {
+    const parts = [this.prefix]
+    
+    if (this.showTimestamp) {
+      parts.push(new Date().toISOString())
+    }
+    
+    parts.push(`[${level}]`, message)
+    
+    // 如果有额外参数，添加到消息中
+    if (args.length > 0) {
+      parts.push(...args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : arg
+      ))
+    }
+    
+    return parts.join(' ')
   }
 
   debug(message: string, ...args: any[]): void {
-    if (this.shouldLog('debug')) {
-      console.debug(`[DEBUG] ${message}`, ...args);
+    if (this.isDebug) {
+      console.debug(this.formatMessage('DEBUG', message, ...args))
     }
   }
 
   info(message: string, ...args: any[]): void {
-    if (this.shouldLog('info')) {
-      console.info(`[INFO] ${message}`, ...args);
-    }
+    console.info(this.formatMessage('INFO', message, ...args))
   }
 
   warn(message: string, ...args: any[]): void {
-    if (this.shouldLog('warn')) {
-      console.warn(`[WARN] ${message}`, ...args);
-    }
+    console.warn(this.formatMessage('WARN', message, ...args))
   }
 
   error(message: string, ...args: any[]): void {
-    if (this.shouldLog('error')) {
-      console.error(`[ERROR] ${message}`, ...args);
-    }
+    console.error(this.formatMessage('ERROR', message, ...args))
+  }
+
+  // 创建新的 logger 实例，继承当前配置
+  create(config: LoggerConfig = {}): MockLogger {
+    return new MockLogger({
+      prefix: config.prefix ?? this.prefix,
+      debug: config.debug ?? this.isDebug,
+      timestamp: config.timestamp ?? this.showTimestamp
+    })
   }
 }
 
-export const logger = new Logger();
-
-export function setupLogger(level: LogLevel): void {
-  logger.setLevel(level);
-} 
+// 创建默认 logger 实例
+export const logger = new MockLogger() 

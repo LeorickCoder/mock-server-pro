@@ -1,0 +1,25 @@
+{
+  "name": "mock-server-pro-vite-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --debug",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit"
+  },
+  "dependencies": {
+    "mock-server-pro": "file:../..",
+    "vue": "^3.3.4"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/express-fileupload": "^1.5.1",
+    "@types/node": "^20.11.19",
+    "@vitejs/plugin-vue": "^4.2.3",
+    "typescript": "^5.3.3",
+    "vite": "^4.5.2",
+    "vue-tsc": "^1.8.5"
+  }
+}

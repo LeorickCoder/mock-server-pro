@@ -1,0 +1,17 @@
+src/
+test-project/
+dev-project/
+.github/
+.vscode/
+*.log
+.DS_Store
+node_modules/
+coverage/
+docs/
+.gitignore
+.eslintrc
+.prettierrc
+tsconfig.json
+jest.config.js
+PLAN.md
+test-server.js 

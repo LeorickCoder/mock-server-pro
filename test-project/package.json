@@ -1,0 +1,19 @@
+{
+  "name": "mock-server-pro-test-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Test project for mock-server-pro with Vite and Webpack examples",
+  "scripts": {
+    "vite:dev": "cd vite-demo && npm run dev",
+    "vite:build": "cd vite-demo && npm run build",
+    "webpack:dev": "cd webpack-demo && npm run dev",
+    "webpack:build": "cd webpack-demo && npm run build",
+    "install:all": "npm install && cd vite-demo && npm install && cd ../webpack-demo && npm install",
+    "setup": "npm run install:all"
+  },
+  "author": "Leorick",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

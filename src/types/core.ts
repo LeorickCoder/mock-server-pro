@@ -56,4 +56,6 @@ export interface Config {
   routes?: RouteConfig;
   // TypeScript支持配置
   typescript?: TypeScriptConfig;
+  // 调试模式
+  debug?: boolean;
 } 

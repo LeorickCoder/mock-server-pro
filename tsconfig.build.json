@@ -1,23 +1,24 @@
 {
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "target": "es2018",
-    "module": "commonjs",
-    "declaration": true,
+    "module": "ESNext",
+    "target": "ES2018",
     "outDir": "./dist",
-    "strict": true,
+    "declaration": true,
+    "sourceMap": true,
+    "declarationMap": true,
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "rootDir": "./src"
+    "forceConsistentCasingInFileNames": true
   },
-  "include": [
-    "src/**/*.ts"
-  ],
+  "include": ["src/**/*"],
   "exclude": [
     "node_modules",
     "dist",
-    "**/*.test.ts",
-    "src/mocks",
-    "src/dev-server.ts"
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts",
+    "src/dev-server.ts",
+    "src/mocks/**/*"
   ]
 } 

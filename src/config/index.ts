@@ -42,7 +42,8 @@ export const defaultConfig: Config = {
       target: 'es2018',
       strict: false
     }
-  }
+  },
+  debug: process.env.DEBUG === 'true' || process.env.NODE_ENV === 'development'
 }
 
 // 配置初始化后同步前缀值

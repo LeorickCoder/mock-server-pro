@@ -4,73 +4,12 @@ import { Config } from '../types/core';
 import path from 'path';
 import { glob } from 'glob';
 import { validateModule } from '../utils';
-
-/**
- * 检测是否有ts-node环境
- */
-function hasTsNode(): boolean {
-  try {
-    return typeof require !== 'undefined' && !!require.resolve('ts-node');
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
- * 检测是否有TypeScript环境
- */
-function hasTypeScript(): boolean {
-  try {
-    return typeof require !== 'undefined' && !!require.resolve('typescript');
-  } catch (e) {
-    return false;
-  }
-}
-
-/**
- * 检测是否在Vite环境
- */
-function isViteEnvironment(): boolean {
-  return typeof process !== 'undefined' && 
-         typeof process.env !== 'undefined' && 
-         (process.env.VITE_USER_NODE_ENV || process.env.VITE_DEV) !== undefined;
-}
-
-/**
- * 检测是否在Webpack环境
- */
-function isWebpackEnvironment(): boolean {
-  // 使用可选链避免未定义的访问错误
-  return typeof (globalThis as any).__webpack_require__ !== 'undefined' || 
-         typeof (globalThis as any).__non_webpack_require__ !== 'undefined';
-}
-
-/**
- * 检测运行环境
- */
-function detectEnvironment(): {
-  environment: 'node' | 'vite' | 'webpack' | 'browser' | 'unknown',
-  hasTypeScript: boolean,
-  hasTsNode: boolean
-} {
-  const result = {
-    environment: 'unknown' as 'node' | 'vite' | 'webpack' | 'browser' | 'unknown',
-    hasTypeScript: hasTypeScript(),
-    hasTsNode: hasTsNode()
-  };
-
-  if (isViteEnvironment()) {
-    result.environment = 'vite';
-  } else if (isWebpackEnvironment()) {
-    result.environment = 'webpack';
-  } else if (typeof window !== 'undefined') {
-    result.environment = 'browser';
-  } else if (typeof process !== 'undefined' && typeof process.versions !== 'undefined' && process.versions.node) {
-    result.environment = 'node';
-  }
-
-  return result;
-}
+import { 
+  detectEnvironment,
+  hasTsNode,
+  Environment,
+  printEnvironmentDiagnostics
+} from '../utils/env-detector';
 
 /**
  * 注册ts-node
@@ -160,9 +99,24 @@ async function dynamicImportModule(filePath: string, config: Config): Promise<an
   if (ext === '.ts' && env.environment === 'vite') {
     try {
       logger.debug(`Loading TypeScript module in Vite environment: ${filePath}`);
-      return await import(filePath);
+      // 使用动态import加载模块
+      const module = await import(filePath);
+      if (module) {
+        return module;
+      }
     } catch (e) {
-      logger.error(`Failed to load TypeScript module in Vite environment (${filePath}):`, e);
+      logger.warn(`Failed to load TypeScript module in Vite environment with direct import (${filePath}):`, e);
+      // 如果动态import失败，尝试使用Node require作为备选方案
+      if (typeof require !== 'undefined') {
+        try {
+          logger.debug(`Fallback: Loading TypeScript module in Vite environment using require: ${filePath}`);
+          registerTsNode(config);
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          return require(filePath);
+        } catch (requireError) {
+          logger.error(`Fallback failed: ${requireError}`);
+        }
+      }
       // 继续尝试其他加载策略
     }
   }
@@ -171,14 +125,54 @@ async function dynamicImportModule(filePath: string, config: Config): Promise<an
   if (ext === '.ts' && env.environment === 'webpack') {
     try {
       logger.debug(`Loading TypeScript module in Webpack environment: ${filePath}`);
-      return await import(filePath);
+      // 使用动态import加载模块
+      const module = await import(filePath);
+      if (module) {
+        return module;
+      }
     } catch (e) {
-      logger.error(`Failed to load TypeScript module in Webpack environment (${filePath}):`, e);
+      logger.warn(`Failed to load TypeScript module in Webpack environment with direct import (${filePath}):`, e);
+      // 如果动态import失败，尝试使用Node require作为备选方案
+      if (typeof require !== 'undefined') {
+        try {
+          logger.debug(`Fallback: Loading TypeScript module in Webpack environment using require: ${filePath}`);
+          registerTsNode(config);
+          // eslint-disable-next-line @typescript-eslint/no-var-requires
+          return require(filePath);
+        } catch (requireError) {
+          logger.error(`Fallback failed: ${requireError}`);
+        }
+      }
       // 继续尝试其他加载策略
     }
   }
   
-  // 策略6: 尝试直接使用动态import (适用于其他环境或ESM)
+  // 策略6: 处理在Node环境中运行的Vite/Webpack项目
+  // 这种情况在开发服务器中很常见，如Vite的configureServer或Webpack的devServer
+  if (ext === '.ts' && env.environment === 'node' && !env.hasTsNode) {
+    try {
+      // 尝试判断是否在使用构建工具的Node环境中
+      const isInBuildTool = process.env.npm_lifecycle_script?.includes('vite') || 
+                            process.env.npm_lifecycle_script?.includes('webpack');
+      
+      if (isInBuildTool) {
+        logger.debug(`Detected TypeScript file in Node environment with build tools: ${filePath}`);
+        
+        // 尝试直接使用动态import
+        try {
+          logger.debug(`Attempting direct import for build tool context: ${filePath}`);
+          return await import(filePath);
+        } catch (importError) {
+          logger.warn(`Direct import failed in build tool context: ${importError}`);
+        }
+      }
+    } catch (e) {
+      logger.warn(`Failed to load TypeScript in build tool context: ${e}`);
+      // 继续尝试其他策略
+    }
+  }
+  
+  // 策略7: 尝试直接使用动态import (适用于其他环境或ESM)
   try {
     logger.debug(`Attempting direct dynamic import: ${filePath}`);
     return await import(filePath);
@@ -208,6 +202,11 @@ async function dynamicImportModule(filePath: string, config: Config): Promise<an
 export async function loadModules(dispatcher: MockDispatcher, config: Config): Promise<void> {
   const { dir, pattern, ignore } = config.modules;
   const environment = detectEnvironment();
+  
+  // 如果启用了调试模式，打印环境诊断信息
+  if (config.debug) {
+    printEnvironmentDiagnostics();
+  }
   
   // 注册TypeScript支持
   if (environment.hasTypeScript && environment.hasTsNode && !(global as any).__ts_node_registered) {

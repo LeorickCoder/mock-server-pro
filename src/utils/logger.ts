@@ -1,67 +1,70 @@
-export interface LoggerConfig {
-  prefix?: string
-  debug?: boolean
-  timestamp?: boolean
-  level?: 'debug' | 'info' | 'warn' | 'error'
+const isDev = process.env.NODE_ENV === 'development';
+const isDebug = process.env.DEBUG === 'true';
+
+interface Logger {
+  debug: (message: string, ...args: any[]) => void;
+  info: (message: string, ...args: any[]) => void;
+  warn: (message: string, ...args: any[]) => void;
+  error: (message: string, ...args: any[]) => void;
 }
 
-class MockLogger {
-  private prefix: string
-  private isDebug: boolean
-  private showTimestamp: boolean
+function getTimestamp(): string {
+  return new Date().toISOString().slice(11, 23);
+}
 
-  constructor(config: LoggerConfig = {}) {
-    this.prefix = config.prefix || '[Mock]'
-    this.isDebug = config.debug ?? process.env.NODE_ENV === 'development'
-    this.showTimestamp = config.timestamp ?? true
-  }
+function formatLogMessage(level: string, message: string): string {
+  return `${getTimestamp()} [${level}] ${message}`;
+}
 
-  private formatMessage(level: string, message: string, ...args: any[]): string {
-    const parts = [this.prefix]
-    
-    if (this.showTimestamp) {
-      parts.push(new Date().toISOString())
+/**
+ * 创建一个格式化的日志记录器
+ */
+export const logger: Logger = {
+  /**
+   * 调试级别日志，仅在调试模式下输出
+   */
+  debug: (message: string, ...args: any[]) => {
+    if (isDebug) {
+      if (args.length > 0) {
+        console.debug(formatLogMessage('DEBUG', message), ...args);
+      } else {
+        console.debug(formatLogMessage('DEBUG', message));
+      }
     }
-    
-    parts.push(`[${level}]`, message)
-    
-    // 如果有额外参数，添加到消息中
+  },
+
+  /**
+   * 信息级别日志
+   */
+  info: (message: string, ...args: any[]) => {
+    if (isDev || isDebug) {
+      if (args.length > 0) {
+        console.info(formatLogMessage('INFO', message), ...args);
+      } else {
+        console.info(formatLogMessage('INFO', message));
+      }
+    }
+  },
+
+  /**
+   * 警告级别日志，始终输出
+   */
+  warn: (message: string, ...args: any[]) => {
     if (args.length > 0) {
-      parts.push(...args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg) : arg
-      ))
+      console.warn(formatLogMessage('WARN', message), ...args);
+    } else {
+      console.warn(formatLogMessage('WARN', message));
     }
-    
-    return parts.join(' ')
-  }
+  },
 
-  debug(message: string, ...args: any[]): void {
-    if (this.isDebug) {
-      console.debug(this.formatMessage('DEBUG', message, ...args))
+  /**
+   * 错误级别日志，始终输出
+   */
+  error: (message: string, ...args: any[]) => {
+    if (args.length > 0) {
+      console.error(formatLogMessage('ERROR', message), ...args);
+    } else {
+      console.error(formatLogMessage('ERROR', message));
     }
   }
-
-  info(message: string, ...args: any[]): void {
-    console.info(this.formatMessage('INFO', message, ...args))
-  }
-
-  warn(message: string, ...args: any[]): void {
-    console.warn(this.formatMessage('WARN', message, ...args))
-  }
-
-  error(message: string, ...args: any[]): void {
-    console.error(this.formatMessage('ERROR', message, ...args))
-  }
-
-  // 创建新的 logger 实例，继承当前配置
-  create(config: LoggerConfig = {}): MockLogger {
-    return new MockLogger({
-      prefix: config.prefix ?? this.prefix,
-      debug: config.debug ?? this.isDebug,
-      timestamp: config.timestamp ?? this.showTimestamp
-    })
-  }
-}
-
-// 创建默认 logger 实例
-export const logger = new MockLogger() 
+}; 

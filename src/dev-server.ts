@@ -1,6 +1,6 @@
-import express from 'express';
-import path from 'path';
-import { createMockServer } from '../../src';
+const express = require('express');
+const path = require('path');
+const { createMockServer } = require('./index');
 
 // 创建Express应用
 const app = express();
@@ -16,6 +16,7 @@ const initializeApp = async () => {
   try {
     // 配置日志记录级别
     process.env.LOG_LEVEL = 'debug';
+    process.env.DEBUG = 'true';
     
     // 使用createMockServer创建一个mock服务器实例 - 使用自动前缀检测模式
     const mockServerApp = await createMockServer({
@@ -57,7 +58,9 @@ const initializeApp = async () => {
           target: 'es2018',
           strict: false
         }
-      }
+      },
+      // 启用调试模式
+      debug: true
     });
     
     // 方式1: 应用级挂载 - 直接挂载到根路径，让mock-server-pro内部处理前缀
@@ -134,9 +137,9 @@ const initializeApp = async () => {
             
             <h2>前缀处理模式：</h2>
             <div class="tabs">
-              <div class="tab active" onclick="showTab('appendMode')">应用级挂载</div>
-              <div class="tab" onclick="showTab('mountMode')">路由级挂载</div>
-              <div class="tab" onclick="showTab('autoMode')">自动检测模式</div>
+              <div class="tab active" id="appendModeTab">应用级挂载</div>
+              <div class="tab" id="mountModeTab">路由级挂载</div>
+              <div class="tab" id="autoModeTab">自动检测模式</div>
             </div>
             
             <div id="appendMode" class="tab-content">
@@ -227,36 +230,60 @@ ctx.registerRoute('get', 'users', handler);    // 系统会智能处理前缀
             
             <script>
               // 切换标签页
-              function showTab(tabId) {
-                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-                document.getElementById(tabId).style.display = 'block';
-                document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-                document.querySelector(`.tab[onclick="showTab('${tabId}')"]`).classList.add('active');
-              }
-              
-              // 获取并显示可用的API端点
-              fetch('/api/mock-info')
-                .then(response => response.json())
-                .then(data => {
-                  const endpointsEl = document.getElementById('endpoints');
-                  if (data && data.routes && data.routes.length) {
-                    endpointsEl.innerHTML = data.routes.map(route => {
-                      return \`
-                        <div class="endpoint">
-                          <strong>\${route.method.toUpperCase()}</strong>: 
-                          <code>\${route.path}</code>
-                        </div>
-                      \`;
-                    }).join('');
-                  } else {
-                    endpointsEl.innerHTML = '<p>没有找到可用的API端点。请添加mock文件。</p>';
-                  }
-                })
-                .catch(err => {
-                  document.getElementById('endpoints').innerHTML = 
-                    '<p>无法获取API端点信息。请确保服务器正在运行。</p>';
-                  console.error('Error fetching API info:', err);
+              document.addEventListener('DOMContentLoaded', function() {
+                const tabContents = {
+                  'appendModeTab': 'appendMode',
+                  'mountModeTab': 'mountMode',
+                  'autoModeTab': 'autoMode'
+                };
+                
+                function showTab(tabId) {
+                  Object.values(tabContents).forEach(contentId => {
+                    document.getElementById(contentId).style.display = 'none';
+                  });
+                  
+                  document.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                  });
+                  
+                  document.getElementById(tabContents[tabId]).style.display = 'block';
+                  document.getElementById(tabId).classList.add('active');
+                }
+                
+                // 给标签添加点击事件
+                Object.keys(tabContents).forEach(tabId => {
+                  document.getElementById(tabId).addEventListener('click', function() {
+                    showTab(tabId);
+                  });
                 });
+                
+                // 默认显示第一个标签页
+                showTab('appendModeTab');
+                
+                // 获取并显示可用的API端点
+                fetch('/api/mock-info')
+                  .then(response => response.json())
+                  .then(data => {
+                    const endpointsEl = document.getElementById('endpoints');
+                    if (data && data.routes && data.routes.length) {
+                      endpointsEl.innerHTML = data.routes.map(route => {
+                        return \`
+                          <div class="endpoint">
+                            <strong>\${route.method.toUpperCase()}</strong>: 
+                            <code>\${route.path}</code>
+                          </div>
+                        \`;
+                      }).join('');
+                    } else {
+                      endpointsEl.innerHTML = '<p>没有找到可用的API端点。请添加mock文件。</p>';
+                    }
+                  })
+                  .catch(err => {
+                    document.getElementById('endpoints').innerHTML = 
+                      '<p>无法获取API端点信息。请确保服务器正在运行。</p>';
+                    console.error('Error fetching API info:', err);
+                  });
+              });
             </script>
           </body>
         </html>
@@ -289,4 +316,4 @@ if (require.main === module) {
 }
 
 // 导出Express应用供Vite使用
-export { app }; 
+module.exports = { app }; 

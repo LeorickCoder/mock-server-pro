@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
-import { createMockMiddleware, createMockServer } from 'mock-server-pro'
+import { createMockMiddleware } from 'mock-server-pro'
 
 
 // https://vitejs.dev/config/
@@ -10,36 +10,34 @@ export default defineConfig({
     vue(),
     {
       name: 'mock-server',
-      async configureServer(server) {
-        // 创建独立的 mock 服务器
-        const mockApp = await createMockServer({
+      configureServer(server) {
+        server.middlewares.use(createMockMiddleware({
           base: {
-            prefix: '/api'
+            prefix: '/api',
+            prefixConfig: {
+              mode: 'auto',
+              detectBasePath: true
+            }
           },
           modules: {
-            dir: path.resolve(__dirname, 'mock'),
+            dir: path.resolve(__dirname, 'src/mocks'),
             pattern: '**/*.{js,ts}',
-            recursive: true,
-            ignore: ['**/node_modules/**']
+            recursive: true
           },
-          hotReload: {
-            enabled: true,
-            ignored: ['**/node_modules/**']
-          },
-        })
-        // 将 mock 服务器作为中间件挂载到根路径
-        server.middlewares.use(mockApp)
+          typescript: {
+            sourcemap: true
+          }
+        }))
       }
     }
   ],
+  server: {
+    port: 3000,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
-  },
-  server: {
-    port: 3000,
-    open: true
   },
   // 确保生成 sourcemap
   build: {

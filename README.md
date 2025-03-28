@@ -1,302 +1,6 @@
 # Mock Server Pro
 
-A powerful mock server focused on solving API mocking problems in frontend development. It supports complete network request chain simulation, parameterized routing, file uploads, and more.
-
-## Latest Features (v1.1.0)
-
-- **Parameterized Routing Support**: Added complete support for Express-style parameterized routes
-  - Support for path parameter extraction (e.g., `/api/users/:id`)
-  - Support for multi-parameter routes (e.g., `/api/users/:userId/posts/:postId`)
-  - Support for regex-constrained parameters (e.g., `/api/items/:id([0-9]+)`)
-  - Support for wildcard paths (e.g., `/api/files/*`)
-- **Route Matching Optimization**: Improved routing algorithms and performance
-  - More precise route matching and sorting
-  - Caching mechanism to enhance matching performance
-  - Intelligent path parameter extraction
-
-For detailed documentation, refer to [Path Parameters Documentation](docs/path-params.md)
-
-## Why Choose Mock Server Pro?
-
-### Pain Points of Existing Mock Solutions
-
-1. **Limitations of Mock.js**
-
-   - Cannot simulate file upload interfaces
-   - Doesn't support complete network request chains
-   - Cannot work properly with Axios interceptors
-   - Lacks type support
-
-2. **Shortcomings of Traditional Mock Servers**
-   - Complex configuration, requiring separate maintenance
-   - Difficult integration with development servers
-   - No hot reload support
-   - Lack of modular management
-
-### Advantages of Mock Server Pro
-
-1. **Complete Request Chain Simulation**
-
-   - Support for file upload interfaces
-   - Perfect compatibility with Axios interceptors
-   - Support for request timeouts and concurrent control
-   - Built-in CORS support
-
-2. **Flexible Integration Methods**
-
-   - Can be integrated as Express middleware
-   - Support for Vite, Webpack, and other build tools
-   - Hot reload support
-   - TypeScript support
-
-3. **Modular Management**
-   - Organize mock interfaces by functional modules
-   - Support for middleware registration
-   - Route conflict detection
-   - Configurable system
-
-## Quick Start
-
-### 1. Installation
-
-```bash
-npm install mock-server-pro
-```
-
-### 2. Integration Examples
-
-#### Vite Integration
-
-```typescript
-// vite.config.ts
-import { defineConfig } from 'vite';
-import { createMockMiddleware } from 'mock-server-pro';
-
-export default defineConfig({
-  server: {
-    middleware: [
-       await createMockMiddleware(app, {
-        base: {
-          prefix: '/api'
-        },
-        modules: {
-          dir: './src/mocks'
-        }
-      });
-    ]
-  }
-});
-```
-
-#### Webpack Integration
-
-```javascript
-// webpack.config.js
-const { createMockMiddleware } = require('mock-server-pro');
-
-module.exports = {
-  devServer: {
-    before: async (app) => {
-      await createMockMiddleware(app, {
-        base: {
-          prefix: '/api',
-        },
-        modules: {
-          dir: './src/mocks',
-        },
-      });
-    },
-  },
-};
-```
-
-#### Vue CLI Integration
-
-```javascript
-// vue.config.js
-const { createMockMiddleware } = require('mock-server-pro');
-
-module.exports = {
-  devServer: {
-    before: async (app) => {
-      await createMockMiddleware(app, {
-        base: {
-          prefix: '/api',
-        },
-        modules: {
-          dir: './src/mocks',
-        },
-      });
-    },
-  },
-};
-```
-
-### 3. Creating Mock Modules
-
-```typescript
-// src/mocks/user/index.ts
-import { ModuleContext } from 'mock-server-pro';
-
-export default function (dispatcher: ModuleContext) {
-  // Register routes
-  dispatcher.registerRoute('get', '/users', (req, res) => {
-    res.json([
-      { id: 1, name: 'John' },
-      { id: 2, name: 'Jane' },
-    ]);
-  });
-
-  // File upload example
-  dispatcher.registerRoute('post', '/upload', (req, res) => {
-    const file = req.files?.file;
-    if (!file) {
-      return res.status(400).json({ message: 'No file uploaded' });
-    }
-    res.json({
-      message: 'Upload successful',
-      filename: file.name,
-      size: file.size,
-    });
-  });
-}
-```
-
-## Features
-
-- ✨ Complete request chain simulation
-- 🔥 Hot reload support
-- 📦 Modular management
-- 🚀 Build tool integration
-- 🔌 Flexible configuration system
-- 📝 TypeScript support
-- 🎯 Route conflict detection
-- 🔄 Concurrent request control
-- 🌈 Cross-origin support
-
-## Configuration
-
-### Default Configuration
-
-```typescript
-const defaultConfig = {
-  base: {
-    prefix: '/api', // API prefix
-  },
-  request: {
-    timeout: 30000, // Request timeout (milliseconds)
-    maxConcurrent: 100, // Maximum concurrent requests
-    bodyLimit: '1mb', // Request body size limit
-  },
-  hotReload: {
-    enabled: process.env.NODE_ENV === 'development', // Whether to enable hot reload
-    ignored: ['**/node_modules/**', '**/.git/**'], // Ignored files
-    stabilityThreshold: 1000, // Stability threshold (milliseconds)
-    pollInterval: 100, // Polling interval (milliseconds)
-  },
-  modules: {
-    dir: 'modules', // Module directory path
-    pattern: '**/*.{js,ts}', // Module file matching pattern
-    recursive: true, // Whether to recursively search subdirectories
-    ignore: [
-      // Ignored file patterns
-      '**/node_modules/**',
-      '**/.git/**',
-      '**/*.d.ts',
-      '**/*.test.*',
-    ],
-  },
-};
-```
-
-## API
-
-### createMockServer(options)
-
-Creates a standalone mock server.
-
-- `options`: Configuration options (optional)
-- Returns: Promise<Express.Application>
-
-### createMockMiddleware(app, options)
-
-Integrates the mock server as middleware into an existing Express application.
-
-- `app`: Express application instance
-- `options`: Configuration options (optional)
-- Returns: Promise<void>
-
-### ModuleContext
-
-Module context interface, providing the following methods:
-
-- `registerRoute(method: HttpMethod, path: string, handler: RouteHandler)`: Registers a route
-- `registerMiddleware(path: string, handler: MiddlewareHandler)`: Registers middleware
-
-## Best Practices
-
-1. Modular Organization:
-
-   - Divide files by functional modules
-   - Each module independently manages its routes and middleware
-   - Use TypeScript for better type hints
-
-2. Error Handling:
-
-   - Use try-catch to catch exceptions
-   - Standardize error return formats
-   - Avoid returning Response objects in route handlers
-
-3. Hot Reload:
-
-   - Enable in development environment
-   - Configure ignore files reasonably
-   - Avoid frequent file modifications
-
-4. Concurrent Control:
-
-   - Set maxConcurrent according to actual needs
-   - Monitor request queue
-
-5. Directory Structure:
-   - Place mock modules in the src/mocks directory
-   - Use index.ts as the module entry point
-   - Organize subdirectories by function
-
-## FAQ
-
-1. Route Conflicts:
-
-   - Check for duplicate route definitions
-   - Ensure correct path format (starting with /)
-   - Avoid using special characters like ..
-
-2. Hot Reload Not Working:
-
-   - Confirm hotReload.enabled is true
-   - Check if file modifications are within the monitoring range
-   - View file change records in the logs
-
-3. Type Errors:
-
-   - Ensure correct import of type definitions
-   - Check return types of route handlers
-   - Use TypeScript's strict mode
-
-4. Concurrent Limitations:
-   - Adjust maxConcurrent configuration
-   - Check if any requests are not properly terminated
-   - Monitor pendingRequests count
-
-## License
-
-MIT
-
----
-
-# 中文文档
-
-# Mock Server Pro
+[English](./README.en.md) | 简体中文
 
 一个强大的 Mock 服务器，专注于解决前端开发中的接口模拟问题。支持完整的网络请求链路模拟、参数化路由、文件上传等功能。
 
@@ -311,6 +15,10 @@ MIT
   - 更精确的路由匹配和排序
   - 缓存机制提高匹配性能
   - 智能的路径参数提取
+- **模块格式支持**: 支持多种模块格式和环境
+  - ESM (ES Modules)
+  - CommonJS
+  - TypeScript
 
 详细文档请参考 [参数化路由文档](docs/path-params.md)
 
@@ -319,7 +27,6 @@ MIT
 ### 现有 Mock 方案的痛点
 
 1. **Mock.js 的局限性**
-
    - 无法模拟文件上传接口
    - 不支持完整的网络请求链路
    - 无法与 Axios 拦截器正常配合
@@ -334,14 +41,12 @@ MIT
 ### Mock Server Pro 的优势
 
 1. **完整的请求链路模拟**
-
    - 支持文件上传接口
    - 与 Axios 拦截器完美配合
    - 支持请求超时、并发控制
    - 内置 CORS 支持
 
 2. **灵活的集成方式**
-
    - 可作为 Express 中间件集成
    - 支持 Vite、Webpack 等构建工具
    - 支持热重载
@@ -363,7 +68,7 @@ npm install mock-server-pro
 
 ### 2. 集成示例
 
-#### Vite 集成
+#### Vite 集成 (ESM)
 
 ```typescript
 // vite.config.ts
@@ -373,7 +78,29 @@ import { createMockMiddleware } from 'mock-server-pro';
 export default defineConfig({
   server: {
     middleware: [
-       await createMockMiddleware(app, {
+      await createMockMiddleware(app, {
+        base: {
+          prefix: '/api'
+        },
+        modules: {
+          dir: './src/mocks'
+        }
+      })
+    ]
+  }
+});
+```
+
+#### Webpack/Express 集成 (CommonJS)
+
+```javascript
+// webpack.config.js 或 express服务器
+const { createMockMiddleware } = require('mock-server-pro');
+
+module.exports = {
+  devServer: {
+    before: async (app) => {
+      await createMockMiddleware(app, {
         base: {
           prefix: '/api'
         },
@@ -381,83 +108,61 @@ export default defineConfig({
           dir: './src/mocks'
         }
       });
-    ]
+    }
   }
-});
-```
-
-#### Webpack 集成
-
-```javascript
-// webpack.config.js
-const { createMockMiddleware } = require('mock-server-pro');
-
-module.exports = {
-  devServer: {
-    before: async (app) => {
-      await createMockMiddleware(app, {
-        base: {
-          prefix: '/api',
-        },
-        modules: {
-          dir: './src/mocks',
-        },
-      });
-    },
-  },
-};
-```
-
-#### Vue CLI 集成
-
-```javascript
-// vue.config.js
-const { createMockMiddleware } = require('mock-server-pro');
-
-module.exports = {
-  devServer: {
-    before: async (app) => {
-      await createMockMiddleware(app, {
-        base: {
-          prefix: '/api',
-        },
-        modules: {
-          dir: './src/mocks',
-        },
-      });
-    },
-  },
 };
 ```
 
 ### 3. 创建 Mock 模块
 
-```typescript
-// src/mocks/user/index.ts
-import { ModuleContext } from 'mock-server-pro';
+支持多种模块格式：
 
-export default function (dispatcher: ModuleContext) {
+#### ESM 格式 (推荐用于 Vite/现代项目)
+
+```typescript
+// src/mocks/user.ts
+import type { ModuleContext } from 'mock-server-pro';
+
+export default function(ctx: ModuleContext) {
   // 注册路由
-  dispatcher.registerRoute('get', '/users', (req, res) => {
+  ctx.registerRoute('get', '/users', (req, res) => {
     res.json([
       { id: 1, name: 'John' },
-      { id: 2, name: 'Jane' },
+      { id: 2, name: 'Jane' }
     ]);
   });
-
-  // 文件上传示例
-  dispatcher.registerRoute('post', '/upload', (req, res) => {
-    const file = req.files?.file;
-    if (!file) {
-      return res.status(400).json({ message: '未上传文件' });
-    }
-    res.json({
-      message: '上传成功',
-      filename: file.name,
-      size: file.size,
-    });
-  });
 }
+```
+
+#### CommonJS 格式 (用于 Webpack/Express 项目)
+
+```javascript
+// src/mocks/user.js
+module.exports = function(ctx) {
+  // 注册路由
+  ctx.registerRoute('get', '/users', (req, res) => {
+    res.json([
+      { id: 1, name: 'John' },
+      { id: 2, name: 'Jane' }
+    ]);
+  });
+};
+```
+
+#### TypeScript + CommonJS (混合项目)
+
+```typescript
+// src/mocks/user.ts
+import type { ModuleContext } from 'mock-server-pro';
+
+module.exports = function(ctx: ModuleContext) {
+  ctx.registerRoute('get', '/users', (req, res) => {
+    res.json([
+      { id: 1, name: 'John' },
+      { id: 2, name: 'Jane' }
+    ]);
+  });
+};
 ```
 
 ## 特性
@@ -471,6 +176,7 @@ export default function (dispatcher: ModuleContext) {
 - 🎯 路由冲突检测
 - 🔄 并发请求控制
 - 🌈 跨域支持
+- 🔧 多模块格式支持
 
 ## 配置
 
@@ -479,31 +185,46 @@ export default function (dispatcher: ModuleContext) {
 ```typescript
 const defaultConfig = {
   base: {
-    prefix: '/api', // API 前缀
+    prefix: '/api', // API前缀
+    prefixConfig: {
+      value: '/api',
+      mode: 'auto',        // 前缀处理模式：'auto'|'append'|'mount'
+      detectBasePath: true // 是否自动检测基路径
+    }
   },
   request: {
-    timeout: 30000, // 请求超时时间（毫秒）
+    timeout: 30000,     // 请求超时时间（毫秒）
     maxConcurrent: 100, // 最大并发请求数
-    bodyLimit: '1mb', // 请求体大小限制
+    bodyLimit: '1mb'    // 请求体大小限制
   },
   hotReload: {
     enabled: process.env.NODE_ENV === 'development', // 是否启用热重载
-    ignored: ['**/node_modules/**', '**/.git/**'], // 忽略的文件
-    stabilityThreshold: 1000, // 稳定性阈值（毫秒）
-    pollInterval: 100, // 轮询间隔（毫秒）
+    ignored: ['**/node_modules/**', '**/.git/**'],   // 忽略的文件
+    stabilityThreshold: 1000,                        // 稳定性阈值（毫秒）
+    pollInterval: 100                                // 轮询间隔（毫秒）
   },
   modules: {
-    dir: 'modules', // 模块目录路径
-    pattern: '**/*.{js,ts}', // 模块文件匹配模式
-    recursive: true, // 是否递归查找子目录
-    ignore: [
-      // 忽略的文件模式
+    dir: 'modules',           // 模块目录路径
+    pattern: '**/*.{js,ts}',  // 模块文件匹配模式
+    recursive: true,          // 是否递归查找子目录
+    ignore: [                 // 忽略的文件模式
       '**/node_modules/**',
       '**/.git/**',
       '**/*.d.ts',
-      '**/*.test.*',
-    ],
+      '**/*.test.*'
+    ]
   },
+  typescript: {
+    sourcemap: true,         // 是否启用源码映射
+    compilerOptions: {       // TypeScript编译器选项
+      module: 'commonjs',
+      esModuleInterop: true,
+      allowSyntheticDefaultImports: true,
+      moduleResolution: 'node',
+      target: 'es2018',
+      strict: false
+    }
+  }
 };
 ```
 
@@ -533,55 +254,58 @@ const defaultConfig = {
 
 ## 最佳实践
 
-1. 模块化组织：
+1. **模块格式选择**：
+   - 现代项目（Vite/ESM）：使用 ESM 格式
+   - 传统项目（Webpack/Express）：使用 CommonJS 格式
+   - 混合项目：根据构建工具选择合适的格式
 
+2. **模块化组织**：
    - 按功能模块划分文件
    - 每个模块独立管理自己的路由和中间件
    - 使用 TypeScript 获得更好的类型提示
 
-2. 错误处理：
-
+3. **错误处理**：
    - 使用 try-catch 捕获异常
    - 统一错误返回格式
    - 避免在路由处理器中返回 Response 对象
 
-3. 热重载：
-
+4. **热重载**：
    - 开发环境下启用
    - 合理配置忽略文件
    - 避免频繁修改文件
 
-4. 并发控制：
-
+5. **并发控制**：
    - 根据实际需求设置 maxConcurrent
    - 监控请求队列
 
-5. 目录结构：
+6. **目录结构**：
    - 将 mock 模块放在 src/mocks 目录下
-   - 使用 index.ts 作为模块入口
+   - 使用 index.ts/js 作为模块入口
    - 按功能组织子目录
 
 ## 常见问题
 
-1. 路由冲突：
+1. **模块导入问题**：
+   - ESM 环境：使用 `export default function(ctx) {}`
+   - CommonJS 环境：使用 `module.exports = function(ctx) {}`
+   - 确保与项目的模块系统匹配
 
+2. **路由冲突**：
    - 检查是否有重复的路由定义
    - 确保路径格式正确（以 / 开头）
    - 避免使用 .. 等特殊字符
 
-2. 热重载不生效：
-
+3. **热重载不生效**：
    - 确认 hotReload.enabled 为 true
    - 检查文件修改是否在监控范围内
    - 查看日志中的文件变化记录
 
-3. 类型错误：
-
+4. **类型错误**：
    - 确保正确导入类型定义
    - 检查路由处理器的返回类型
    - 使用 TypeScript 的严格模式
 
-4. 并发限制：
+5. **并发限制**：
    - 调整 maxConcurrent 配置
    - 检查是否有请求未正确结束
    - 监控 pendingRequests 数量

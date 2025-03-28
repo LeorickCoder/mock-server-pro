@@ -20,7 +20,7 @@ A powerful mock server focused on solving API mocking needs in frontend developm
   - CommonJS
   - TypeScript
 
-For detailed documentation, please refer to [Path Parameters Documentation](docs/path-params.md)
+For detailed documentation, please refer to [Path Parameters Documentation](https://github.com/LeorickCoder/mock-server-pro/blob/main/docs/path-params.md)
 
 ## Why Choose Mock Server Pro?
 

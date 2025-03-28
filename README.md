@@ -4,23 +4,23 @@
 
 一个强大的 Mock 服务器，专注于解决前端开发中的接口模拟问题。支持完整的网络请求链路模拟、参数化路由、文件上传等功能。
 
-## 最新功能 (v1.1.0)
+## 最新特性 (v1.1.0)
 
-- **参数化路由支持**: 添加了对Express风格参数化路由的完整支持
-  - 支持路径参数提取（如 `/api/users/:id`）
-  - 支持多参数路由（如 `/api/users/:userId/posts/:postId`）
-  - 支持正则约束参数（如 `/api/items/:id([0-9]+)`）
-  - 支持通配符路径（如 `/api/files/*`）
-- **路由匹配优化**: 改进了路由匹配算法和性能
+- **参数化路由支持**：添加了完整的Express风格参数化路由支持
+  - 路径参数提取（如 `/api/users/:id`）
+  - 多参数路由（如 `/api/users/:userId/posts/:postId`）
+  - 正则表达式约束（如 `/api/items/:id([0-9]+)`）
+  - 通配符路径（如 `/api/files/*`）
+- **路由匹配优化**：改进了路由匹配算法和性能
   - 更精确的路由匹配和排序
-  - 缓存机制提高匹配性能
-  - 智能的路径参数提取
-- **模块格式支持**: 支持多种模块格式和环境
+  - 缓存机制提升匹配性能
+  - 智能路径参数提取
+- **模块格式支持**：支持多种模块格式和环境
   - ESM (ES Modules)
   - CommonJS
   - TypeScript
 
-详细文档请参考 [参数化路由文档](docs/path-params.md)
+详细文档请参考 [路径参数文档](https://github.com/LeorickCoder/mock-server-pro/blob/main/docs/path-params.md)
 
 ## 为什么选择 Mock Server Pro？
 
@@ -422,142 +422,4 @@ module.exports = {
 1. **带前缀路径** - 完整包含前缀的路径
 2. **相对路径** - 不包含前缀的路径，系统会自动添加前缀
 
-```js
-// 模块示例
-module.exports = function(ctx) {
-  // 方式1: 带前缀路径 (完整路径)
-  ctx.registerRoute('get', '/api/users', (req, res) => {
-    res.json({ users: [] });
-  });
-  
-  // 方式2: 相对路径 (自动添加前缀)
-  ctx.registerRoute('get', 'products', (req, res) => {
-    // 最终路径为: /api/products
-    res.json({ products: [] });
-  });
-};
 ```
-
-### 不同的挂载方式
-
-根据你的项目需求，可以选择以下两种方式挂载 mock-server-pro：
-
-#### 1. 应用级挂载 (Append 模式)
-
-应用级挂载是将中间件直接挂载到 Express 应用上：
-
-```js
-// 配置使用 append 模式
-const config = {
-  base: {
-    prefix: '/api',
-    prefixConfig: { mode: 'append' }
-  }
-};
-
-// Express 挂载
-app.use(createMockMiddleware(app, config));
-
-// 或使用内置函数
-const mockServer = await createMockServer(config);
-app.use(mockServer);
-```
-
-在这种模式下：
-- **路由定义**：路径需要包含 `/api` 前缀或使用相对路径（自动添加前缀）
-- **请求处理**：mock-server-pro 会内部处理前缀匹配
-
-#### 2. 路由级挂载 (Mount 模式)
-
-路由级挂载是将中间件挂载到特定的路径前缀下：
-
-```js
-// 配置使用 mount 模式
-const config = {
-  base: {
-    prefix: '/api',
-    prefixConfig: { mode: 'mount' }
-  }
-};
-
-// Express 挂载（注意路径前缀）
-app.use('/api', createMockMiddleware(app, config));
-
-// 或使用内置函数
-// createMockServer 会自动使用前缀挂载
-const mockServer = await createMockServer(config);
-```
-
-在这种模式下：
-- **路由定义**：路径不需要包含 `/api` 前缀（因为已经在挂载时指定）
-- **请求处理**：Express 会先匹配 `/api`，然后再将剩余路径传递给中间件
-
-#### 3. 自动模式 (推荐)
-
-自动模式会根据请求的 URL 结构自动检测挂载方式：
-
-```js
-// 配置使用 auto 模式
-const config = {
-  base: {
-    prefix: '/api',
-    prefixConfig: { 
-      mode: 'auto',
-      detectBasePath: true 
-    }
-  }
-};
-
-// 可以使用任意方式挂载
-app.use('/api', createMockMiddleware(app, config));
-// 或
-app.use(createMockMiddleware(app, config));
-```
-
-在这种模式下：
-- mock-server-pro 会自动检测是否已经通过路由路径挂载
-- 根据检测结果动态调整路径处理逻辑
-- 提供最大的灵活性和兼容性
-
-### 路径模式配置
-
-你可以通过 `routes.pathMode` 配置来控制路径处理的行为：
-
-```js
-// mock.config.js
-module.exports = {
-  routes: {
-    // auto: 自动处理路径前缀 (默认)
-    // strict: 严格模式，要求路径必须符合规范
-    pathMode: 'auto',
-    
-    // 是否允许覆盖已存在的路由
-    allowOverride: false
-  }
-}
-```
-
-- `auto` 模式：系统会自动处理路径，确保包含正确的前缀
-- `strict` 模式：要求开发者提供正确格式的路径，不符合规范会抛出错误
-
-### 路由冲突处理
-
-当多个模块注册了相同的路由路径时：
-
-- 默认行为：抛出错误，防止意外覆盖
-- 通过设置 `routes.allowOverride = true` 允许覆盖，并会输出警告日志
-
-### 最佳实践
-
-1. **使用自动模式**：设置 `prefixConfig.mode = 'auto'` 并启用 `detectBasePath`
-2. **明确使用方式**：根据项目需求选择一种挂载方式，并在团队内统一
-3. **路由定义**：尽可能使用相对路径，让系统自动处理前缀
-
-### 挂载方式对比
-
-| 特性 | 应用级挂载 (Append) | 路由级挂载 (Mount) |
-|------|-------------------|-------------------|
-| 挂载代码 | `app.use(middleware)` | `app.use('/api', middleware)` |
-| 路径定义 | 需要包含前缀 | 不需要包含前缀 |
-| 适用场景 | 集中管理路由 | 与其他路由共存 |
-| 路径冲突 | 低风险 | 需谨慎处理 |

@@ -14,11 +14,9 @@
   },
   "include": ["src/**/*"],
   "exclude": [
-    "node_modules",
-    "dist",
-    "src/**/*.test.ts",
-    "src/**/*.spec.ts",
-    "src/dev-server.ts",
-    "src/mocks/**/*"
+    "**/*.test.*",
+    "**/__tests__/*",
+    "src/mocks/**/*",
+    "src/dev-server.ts"
   ]
 } 

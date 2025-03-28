@@ -1,8 +1,16 @@
 {
-  "extends": "./tsconfig.build.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "CommonJS",
     "outDir": "./dist/cjs",
-    "declaration": false
-  }
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "**/*.test.*",
+    "**/__tests__/*",
+    "src/mocks/**/*",
+    "src/dev-server.ts"
+  ]
 } 

@@ -1,6 +1,6 @@
 {
   "name": "mock-server-pro",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "高级mock服务器，支持参数化路由、中间件、TypeScript和热重载, with path parameter support",
   "main": "dist/cjs/index.js",
   "module": "dist/index.js",
@@ -60,4 +60,4 @@
     "ts-node-dev": "^2.0.0",
     "ts-node": "^10.9.2"
   }
-} 
+}
